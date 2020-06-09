@@ -19,7 +19,8 @@ const initialZoom = 8.56;
 export default function ForecastMap(props:{
   currentDay: Date,
   locations: Location[],
-  day: number
+  day: number,
+  onRequestAddLocation: (latLng:{lat:number, lng:number}) => void
 }) {
   const [map, setMap] = React.useState(null);
   const [google, setGoogle] = React.useState<any>(undefined);
@@ -35,12 +36,22 @@ export default function ForecastMap(props:{
       console.log("Map onLoad");
       map.fitBounds(bounds);
       setMap(map)
+      map.addListener('rightclick', onMapRightClick);
     }
   }, [])
  
   const onUnmount = React.useCallback(function callback(map) {
     setMap(null)
-  }, [])
+  }, []);
+
+  const onMapRightClick = (event:any) => {
+    var lat:number = event.latLng.lat();
+    var lng:number = event.latLng.lng();
+    props.onRequestAddLocation({
+      lat: lat,
+      lng
+    });
+  }
 
   const MapContents = () => {
     if (google === undefined) {

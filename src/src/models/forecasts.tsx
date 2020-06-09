@@ -111,6 +111,10 @@ export class ForecastFullDay {
       });
       return max;
     } else {
+      // Sometimes for longer-range forecast they don't include the chance
+      if (forecastPeriod.source.icon.indexOf("showers") !== -1) {
+        return 50;
+      }
       return 0;
     }
   }
