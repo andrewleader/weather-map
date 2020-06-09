@@ -103,6 +103,44 @@ export class ForecastFullDay {
     }
   }
 
+  getTempRating() {
+    if (this.afternoonTemp) {
+
+      // Anything within 60-70 is perfect
+      if (this.afternoonTemp >= 60 && this.afternoonTemp <= 70) {
+        return 1;
+      }
+
+      if (this.afternoonTemp > 70) {
+        // Anything higher than 90 gets a score of 0
+        return this.getTempRatingRelativeTo(this.afternoonTemp, 70, 90);
+      } else {
+        // Anything lower than 40 gets a score of 0
+        return this.getTempRatingRelativeTo(this.afternoonTemp, 60, 40);
+      }
+    } else {
+      return 1;
+    }
+  }
+
+  getOverallRating() {
+    return this.getTempRating();
+  }
+
+  private getTempRatingRelativeTo(forecastedTemp: number, tempAtOneRating: number, tempAtZeroRating: number) {
+    // For example, 70 degrees gets a 1, 90 degrees gets a 0... it's 85 degrees, that should become 0.25 (so 90 - 85 = 5, and then 5/20 = 0.25).
+    // And on the other end, 60 gets a 1, 40 gets a 0... it's 45 degrees, so 40-45 = 5, and then 5/20, so 0.25
+    var diff = Math.abs(tempAtZeroRating - forecastedTemp);
+    var fraction = diff / Math.abs(tempAtZeroRating - tempAtOneRating);
+    if (fraction > 1) {
+      return 1;
+    } else if (fraction < 0) {
+      return 0;
+    } else {
+      return fraction;
+    }
+  }
+
   getSummaryString() {
     return this.getTempString() + ", " + this.windSpeed;
   }
