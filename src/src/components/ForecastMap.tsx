@@ -24,13 +24,16 @@ export default function ForecastMap(props:{
   const [map, setMap] = React.useState(null)
  
   const onLoad = React.useCallback(function callback(map) {
-    var windowAny = window as any;
-    const bounds = new windowAny.google.maps.LatLngBounds(
-      { lat: 49.1938, lng: -125.5518 },
-      { lat: 45.9627, lng: -116.9385 }
-    );
-    map.fitBounds(bounds);
-    setMap(map)
+    if (map.getBounds() === null || map.getBounds() === undefined) {
+      var windowAny = window as any;
+      const bounds = new windowAny.google.maps.LatLngBounds(
+        { lat: 49.1938, lng: -125.5518 },
+        { lat: 45.9627, lng: -116.9385 }
+      );
+      console.log("Map onLoad");
+      map.fitBounds(bounds);
+      setMap(map)
+    }
   }, [])
  
   const onUnmount = React.useCallback(function callback(map) {
