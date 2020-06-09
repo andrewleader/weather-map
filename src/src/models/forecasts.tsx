@@ -59,6 +59,7 @@ export class ForecastFullDay {
   morningTemp?: number;
   afternoonTemp?: number;
   windSpeed: string;
+  precipPercent: number; // Number from 0-100
 
   constructor(day: ForecastPeriod | undefined, night: ForecastPeriod, prevForecastFullDay?: ForecastFullDay) {
     this.day = day;
@@ -69,9 +70,11 @@ export class ForecastFullDay {
       this.icon = day.source.icon;
       this.afternoonTemp = day.source.temperature;
       this.windSpeed = day.source.windSpeed;
+      this.precipPercent = this.parsePrecipPercent(day);
     } else {
       this.icon = night.source.icon;
       this.windSpeed = night.source.windSpeed;
+      this.precipPercent = this.parsePrecipPercent(night);
     }
 
     if (prevForecastFullDay) {
@@ -93,6 +96,25 @@ export class ForecastFullDay {
     this.snowAccumulation = new SnowAccumulation(dayLow + night.snowAccumulation.low, dayHigh + night.snowAccumulation.high);
   }
 
+  private parsePrecipPercent(forecastPeriod: ForecastPeriod) {
+    // API doesn't return percents, but the image URL contains the percip percents
+    var myReg = /,\d\d/g;
+    var matches = forecastPeriod.source.icon.match(myReg);
+    if (matches) {
+      var max = 0;
+      matches.forEach(m => {
+        var trimmed = m.substr(1);
+        var percent = parseInt(trimmed);
+        if (percent > max) {
+          max = percent;
+        }
+      });
+      return max;
+    } else {
+      return 0;
+    }
+  }
+
   getTempString() {
     if (this.morningTemp) {
       return this.morningTemp + " - " + this.afternoonTemp;
@@ -107,13 +129,13 @@ export class ForecastFullDay {
     if (this.afternoonTemp) {
 
       // Anything within 60-70 is perfect
-      if (this.afternoonTemp >= 60 && this.afternoonTemp <= 70) {
+      if (this.afternoonTemp >= 60 && this.afternoonTemp <= 75) {
         return 1;
       }
 
       if (this.afternoonTemp > 70) {
         // Anything higher than 90 gets a score of 0
-        return this.getTempRatingRelativeTo(this.afternoonTemp, 70, 90);
+        return this.getTempRatingRelativeTo(this.afternoonTemp, 75, 90);
       } else {
         // Anything lower than 40 gets a score of 0
         return this.getTempRatingRelativeTo(this.afternoonTemp, 60, 40);
@@ -123,8 +145,12 @@ export class ForecastFullDay {
     }
   }
 
+  getPrecipRating() {
+    return 1 - this.precipPercent / 100;
+  }
+
   getOverallRating() {
-    return this.getTempRating();
+    return this.getTempRating() * this.getPrecipRating();
   }
 
   private getTempRatingRelativeTo(forecastedTemp: number, tempAtOneRating: number, tempAtZeroRating: number) {
