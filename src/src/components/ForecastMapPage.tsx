@@ -85,10 +85,6 @@ export default function ForecastMapPage() {
     }
   }
 
-  const sliderValueLabelFormat = (value:number) => {
-    return getDayOfWeek(value);
-  }
-
   function ValueLabelComponent(props:{
     children: any,
     open?: boolean,

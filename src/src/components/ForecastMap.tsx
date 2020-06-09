@@ -21,11 +21,13 @@ export default function ForecastMap(props:{
   locations: Location[],
   day: number
 }) {
-  const [map, setMap] = React.useState(null)
+  const [map, setMap] = React.useState(null);
+  const [google, setGoogle] = React.useState<any>(undefined);
  
   const onLoad = React.useCallback(function callback(map) {
     if (map.getBounds() === null || map.getBounds() === undefined) {
       var windowAny = window as any;
+      setGoogle(windowAny.google);
       const bounds = new windowAny.google.maps.LatLngBounds(
         { lat: 49.1938, lng: -125.5518 },
         { lat: 45.9627, lng: -116.9385 }
@@ -40,6 +42,27 @@ export default function ForecastMap(props:{
     setMap(null)
   }, [])
 
+  const MapContents = () => {
+    if (google === undefined) {
+      return null;
+    }
+
+    // https://developers.google.com/maps/documentation/javascript/reference/marker#Symbol
+
+    return (
+      <>
+        {props.locations.map(location => (
+          <Marker key={location.name} position={location.position}>
+            <InfoWindow>
+              <ForecastLocationPreview location={location} day={props.day}/>
+            </InfoWindow>
+          </Marker>
+        ))}
+      </>
+    )
+  }
+
+  // Maps library docs: https://react-google-maps-api-docs.netlify.app/
   return (
     <LoadScript id="blah"
       googleMapsApiKey="AIzaSyCWGA_FdGTGxx0uH5rbJLXaEHOcJ93otA0">
@@ -49,14 +72,7 @@ export default function ForecastMap(props:{
         zoom={initialZoom}
         onLoad={onLoad}
         onUnmount={onUnmount}>
-        {props.locations.map(location => (
-          <Marker key={location.name} position={location.position}>
-            <InfoWindow>
-              <ForecastLocationPreview location={location} day={props.day}/>
-            </InfoWindow>
-          </Marker>
-        ))}
-        {/* <Marker position={{lat:48, lng:-120}} label="Home"/> */}
+        <MapContents/>
       </GoogleMap>
     </LoadScript>
   )
