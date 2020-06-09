@@ -13,6 +13,8 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Api from '../api/api';
 import PointInfo from '../models/pointInfo';
+import { observer } from "mobx-react";
+import ForecastMapPageState from "../models/forecastMapPageState";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -28,47 +30,12 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function ForecastMapPage() {
+const ForecastMapPage = observer(() => {
   const classes = useStyles();
-  const [locations, setLocations] = React.useState<Location[]>([]);
-  const [day, setDay] = React.useState(0);
-  const [addLocationLatLng, setAddLocationLatLng] = React.useState<undefined | {lat:Number,lng:number}>();
-  const addLocationOpen = addLocationLatLng !== undefined;
-  const [addingLocation, setAddingLocation] = React.useState(false);
-  const [newLocationName, setNewLocationName] = React.useState("");
-
-  const load = async () => {
-    var homeSnapshot = await db.collection('forecastGroups').doc('home').get();
-    var home:any = homeSnapshot.data();
-    var locationsRaw:any = home.locations; // Map (key-value pair), where key is friendly name like Washington Pass, and value is string like "OTX,46,149"
-    var locations:Location[] = [];
-    for (var locationName in locationsRaw) {
-      var location = new Location(locationName, locationsRaw[locationName]);
-      locations.push(location);
-      var existing = await db.collection('forecasts').doc(location.pointId).get();
-      var nowInSeconds = Date.now() / 1000;
-      if (existing.exists && existing.data()!.updated >= (nowInSeconds - 60 * 40)) {
-        location.forecastData = ForecastData.getFromData(JSON.parse(existing.data()!.data));
-        console.log("cached");
-      } else {
-        await loadLocation(location);
-      }
-    }
-    setLocations(locations);
-  }
-
-  const loadLocation = async (location:Location) => {
-    var forecastData = await ForecastData.getAsync(location.pointInfo);
-    location.forecastData = forecastData;
-
-    db.collection('forecasts').doc(location.pointId).set({
-      data: JSON.stringify(forecastData.rawData),
-      updated: Date.now() / 1000
-    }, { merge: true });
-  }
+  const state = ForecastMapPageState.current;
 
   useEffect(() => {
-    load();
+    state.load();
   }, []);
 
   const getDayOfWeek = (relativeDay:number) => {
@@ -112,51 +79,25 @@ export default function ForecastMapPage() {
     );
   }
 
-  const onRequestAddLocation = (latLng:{lat:number, lng:number}) => {
-    setAddLocationLatLng(latLng);
-  }
-
   const handleCloseAddLocation = () => {
-    setAddLocationLatLng(undefined);
+    state.closeAddLocation();
   }
 
-  const handleCommitAddLocation = async () => {
-    if (newLocationName.trim().length === 0) {
-      alert("You must enter a name!");
-      return;
-    }
-
-    setAddingLocation(true);
-
-    try {
-      var pointInfo = await Api.get("/points/" + addLocationLatLng!.lat + "," + addLocationLatLng!.lng) as PointInfo;
-      var homeSnapshot = await db.collection('forecastGroups').doc('home').get();
-      var locations:any = homeSnapshot!.data()!.locations;
-      if (locations[newLocationName]) {
-        alert("That name is already being used");
-        return;
-      }
-      locations[newLocationName] = `${pointInfo.cwa},${pointInfo.gridX},${pointInfo.gridY},${addLocationLatLng!.lat},${addLocationLatLng!.lng}`;
-      await homeSnapshot.ref.update({
-        locations
-      });
-      window.location.reload();
-    } catch (e) {
-      alert(e);
-    } finally {
-      setAddingLocation(false);
-    }
+  const handleCommitAddLocation = () => {
+    state.completeAddLocation();
   }
+
+  const addLocationOpen = state.addLocationLatLng !== undefined;
   
   return (
     <div className={classes.root}>
       <div className={classes.dayContainer}>
         <Typography>
-          {getDayOfWeek(day)}
+          {getDayOfWeek(state.day)}
         </Typography>
         <Slider
-          value={day}
-          onChange={(e, newVal) => setDay(newVal as number)}
+          value={state.day}
+          onChange={(e, newVal) => state.setDay(newVal as number)}
           ValueLabelComponent={ValueLabelComponent}
           step={1}
           marks
@@ -164,33 +105,35 @@ export default function ForecastMapPage() {
           max={6}/>
       </div>
       <div className={classes.mapContainer}>
-        <ForecastMap currentDay={new Date()} locations={locations} day={day} onRequestAddLocation={onRequestAddLocation}/>
+        <ForecastMap forecastMapPageState={state}/>
       </div>
       <Dialog open={addLocationOpen} onClose={handleCloseAddLocation} aria-labelledby="form-dialog-title">
         <DialogTitle id="form-dialog-title">Add location</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {addLocationLatLng?.lat}, {addLocationLatLng?.lng}. Note that this adds the location for EVERYONE. Give the location a name.
+            {state.addLocationLatLng?.lat}, {state.addLocationLatLng?.lng}. Note that this adds the location for EVERYONE. Give the location a name. {state.newLocationName}.
           </DialogContentText>
           <TextField
             autoFocus
             margin="dense"
             id="name"
             label="Name"
-            value={newLocationName}
-            onChange={(e) => setNewLocationName(e.target.value)}
+            value={state.newLocationName}
+            onChange={(e) => state.newLocationName = e.target.value}
             fullWidth
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseAddLocation} color="primary" disabled={addingLocation}>
+          <Button onClick={handleCloseAddLocation} color="primary" disabled={state.addingLocation}>
             Cancel
           </Button>
-          <Button onClick={handleCommitAddLocation} color="primary" disabled={addingLocation}>
+          <Button onClick={handleCommitAddLocation} color="primary" disabled={state.addingLocation}>
             Add
           </Button>
         </DialogActions>
       </Dialog>
     </div>
   );
-}
+});
+
+export default ForecastMapPage;

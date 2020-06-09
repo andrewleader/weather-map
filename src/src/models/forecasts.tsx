@@ -98,7 +98,7 @@ export class ForecastFullDay {
 
   private parsePrecipPercent(forecastPeriod: ForecastPeriod) {
     // API doesn't return percents, but the image URL contains the percip percents
-    var myReg = /,\d\d/g;
+    var myReg = /,\d\d\d?/g;
     var matches = forecastPeriod.source.icon.match(myReg);
     if (matches) {
       var max = 0;

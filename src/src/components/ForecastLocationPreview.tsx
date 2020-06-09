@@ -1,10 +1,11 @@
 import React from 'react';
 import { Location } from '../models/location';
+import { observer } from 'mobx-react';
 
-export default function ForecastLocationPreview(props:{
+const ForecastLocationPreview = observer((props:{
   location: Location,
   day: number
-}) {
+}) => {
 
   var forecastDay = props.location.forecastData!.days[props.day];
   var overallRating = forecastDay.getOverallRating(); // Value from 0-1, with 1 being best
@@ -32,4 +33,6 @@ export default function ForecastLocationPreview(props:{
       <p>{forecastDay.getSummaryString()}</p>
     </div>
   );
-}
+});
+
+export default ForecastLocationPreview;

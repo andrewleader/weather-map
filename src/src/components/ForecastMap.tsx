@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { Location } from '../models/location';
 import ForecastLocationPreview from './ForecastLocationPreview';
+import ForecastMapPageState from '../models/forecastMapPageState';
+import { observer } from 'mobx-react';
 
 const containerStyle = {
   width: '100%',
@@ -16,12 +18,10 @@ const initialCenter = {
 
 const initialZoom = 8.56;
 
-export default function ForecastMap(props:{
-  currentDay: Date,
-  locations: Location[],
-  day: number,
-  onRequestAddLocation: (latLng:{lat:number, lng:number}) => void
-}) {
+const ForecastMap = observer((props:{
+  forecastMapPageState: ForecastMapPageState
+}) => {
+  const state = props.forecastMapPageState;
   const [map, setMap] = React.useState(null);
   const [google, setGoogle] = React.useState<any>(undefined);
  
@@ -47,13 +47,13 @@ export default function ForecastMap(props:{
   const onMapRightClick = (event:any) => {
     var lat:number = event.latLng.lat();
     var lng:number = event.latLng.lng();
-    props.onRequestAddLocation({
+    state.requestAddLocation({
       lat: lat,
       lng
     });
   }
 
-  const MapContents = () => {
+  const MapContents = observer(() => {
     if (google === undefined) {
       return null;
     }
@@ -62,16 +62,16 @@ export default function ForecastMap(props:{
 
     return (
       <>
-        {props.locations.map(location => (
+        {state.locations.map(location => (
           <Marker key={location.name} position={location.position}>
             <InfoWindow>
-              <ForecastLocationPreview location={location} day={props.day}/>
+              <ForecastLocationPreview location={location} day={state.day}/>
             </InfoWindow>
           </Marker>
         ))}
       </>
     )
-  }
+  });
 
   // Maps library docs: https://react-google-maps-api-docs.netlify.app/
   return (
@@ -87,4 +87,6 @@ export default function ForecastMap(props:{
       </GoogleMap>
     </LoadScript>
   )
-}
+});
+
+export default ForecastMap;
