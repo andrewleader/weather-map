@@ -1,10 +1,12 @@
 import PointInfo from "./pointInfo";
+import { ForecastData } from "./forecasts";
 
 export class Location {
   name: string;
   pointInfo: PointInfo;
   pointId: string;
   position: {lat:number, lng:number};
+  forecastData?: ForecastData;
 
   constructor(name: string, pointInfoStr: string) {
     this.name = name;

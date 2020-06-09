@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { Location } from '../models/location';
 
 const containerStyle = {
@@ -17,7 +17,8 @@ const initialZoom = 8.56;
 
 export default function ForecastMap(props:{
   currentDay: Date,
-  locations: Location[]
+  locations: Location[],
+  day: number
 }) {
   const [map, setMap] = React.useState(null)
  
@@ -45,7 +46,11 @@ export default function ForecastMap(props:{
         onLoad={onLoad}
         onUnmount={onUnmount}>
         {props.locations.map(location => (
-          <Marker key={location.name} position={location.position} label={location.name}/>
+          <Marker key={location.name} position={location.position}>
+            <InfoWindow>
+              <img src={location.forecastData?.days[props.day].icon} width="80" height="80"/>
+            </InfoWindow>
+          </Marker>
         ))}
         {/* <Marker position={{lat:48, lng:-120}} label="Home"/> */}
       </GoogleMap>

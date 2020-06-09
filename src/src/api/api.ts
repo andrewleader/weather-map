@@ -14,7 +14,7 @@ export interface GridpointForecastPeriod {
   detailedForecast: string; // Like "Rain and snow. Cloudy. High near 35, with temperatures falling to around 33 in the afternoon. West southwest wind around 10 mph. Chance of precipitation is 100%. New snow accumulation of 1 to 3 inches possible."
 }
 
-interface GridpointForecastProperties {
+export interface GridpointForecastProperties {
   periods: GridpointForecastPeriod[];
 }
 

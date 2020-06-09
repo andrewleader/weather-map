@@ -1,4 +1,4 @@
-import Api, { GridpointForecastPeriod } from "../api/api";
+import Api, { GridpointForecastPeriod, GridpointForecastProperties } from "../api/api";
 import PointInfo from "./pointInfo";
 
 class SnowAccumulation {
@@ -55,11 +55,18 @@ export class ForecastFullDay {
   overnight?: SnowAccumulation;
   oneDay?: SnowAccumulation;
   twoDays?: SnowAccumulation;
+  icon: string;
 
   constructor(day: ForecastPeriod | undefined, night: ForecastPeriod, prevForecastFullDay?: ForecastFullDay) {
     this.day = day;
     this.night = night;
     this.prev = prevForecastFullDay;
+
+    if (day) {
+      this.icon = day.source.icon;
+    } else {
+      this.icon = night.source.icon;
+    }
 
     if (prevForecastFullDay) {
       this.overnight = prevForecastFullDay.night.snowAccumulation;
@@ -93,13 +100,20 @@ export class ForecastFullDay {
 
 export class ForecastData {
   days: ForecastFullDay[];
+  rawData: GridpointForecastProperties;
 
-  constructor(days: ForecastFullDay[]) {
+  constructor(days: ForecastFullDay[], rawData: GridpointForecastProperties) {
     this.days = days;
+    this.rawData = rawData;
   }
 
   static async getAsync(pointInfo: PointInfo) {
     const data = await Api.getForecastAsync(pointInfo);
+    return this.getFromData(data);
+  }
+
+  static getFromData(rawData: GridpointForecastProperties) {
+    const data = rawData 
     const periods = data.periods.map(period => new ForecastPeriod(period));
     const days: ForecastFullDay[] = [];
 
@@ -116,6 +130,6 @@ export class ForecastData {
       }
     });
 
-    return new ForecastData(days);
+    return new ForecastData(days, data);
   }
 }
