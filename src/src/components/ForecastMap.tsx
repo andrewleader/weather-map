@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { Location } from '../models/location';
+import ForecastLocationPreview from './ForecastLocationPreview';
 
 const containerStyle = {
   width: '100%',
@@ -48,7 +49,7 @@ export default function ForecastMap(props:{
         {props.locations.map(location => (
           <Marker key={location.name} position={location.position}>
             <InfoWindow>
-              <img src={location.forecastData?.days[props.day].icon} width="80" height="80"/>
+              <ForecastLocationPreview location={location} day={props.day}/>
             </InfoWindow>
           </Marker>
         ))}

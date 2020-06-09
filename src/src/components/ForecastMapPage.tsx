@@ -50,7 +50,7 @@ export default function ForecastMapPage() {
 
     db.collection('forecasts').doc(location.pointId).set({
       data: JSON.stringify(forecastData.rawData),
-      updated: Date.now()
+      updated: Date.now() / 1000
     }, { merge: true });
   }
 

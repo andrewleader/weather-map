@@ -56,6 +56,9 @@ export class ForecastFullDay {
   oneDay?: SnowAccumulation;
   twoDays?: SnowAccumulation;
   icon: string;
+  morningTemp?: number;
+  afternoonTemp?: number;
+  windSpeed: string;
 
   constructor(day: ForecastPeriod | undefined, night: ForecastPeriod, prevForecastFullDay?: ForecastFullDay) {
     this.day = day;
@@ -64,11 +67,15 @@ export class ForecastFullDay {
 
     if (day) {
       this.icon = day.source.icon;
+      this.afternoonTemp = day.source.temperature;
+      this.windSpeed = day.source.windSpeed;
     } else {
       this.icon = night.source.icon;
+      this.windSpeed = night.source.windSpeed;
     }
 
     if (prevForecastFullDay) {
+      this.morningTemp = prevForecastFullDay.night.source.temperature;
       this.overnight = prevForecastFullDay.night.snowAccumulation;
       if (prevForecastFullDay.day) {
         this.oneDay = prevForecastFullDay.snowAccumulation;
@@ -84,6 +91,20 @@ export class ForecastFullDay {
     const dayHigh = day ? day.snowAccumulation.high : 0;
 
     this.snowAccumulation = new SnowAccumulation(dayLow + night.snowAccumulation.low, dayHigh + night.snowAccumulation.high);
+  }
+
+  getTempString() {
+    if (this.morningTemp) {
+      return this.morningTemp + " - " + this.afternoonTemp;
+    } else if (this.afternoonTemp) {
+      return this.afternoonTemp;
+    } else {
+      return "";
+    }
+  }
+
+  getSummaryString() {
+    return this.getTempString() + ", " + this.windSpeed;
   }
 
   getSource() {
