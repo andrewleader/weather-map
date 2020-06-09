@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { makeStyles, Typography, Slider } from '@material-ui/core';
+import { makeStyles, Typography, Slider, Tooltip } from '@material-ui/core';
 import ForecastMap from './ForecastMap';
 import db from '../db';
 import { Location } from '../models/location';
@@ -57,17 +57,62 @@ export default function ForecastMapPage() {
   useEffect(() => {
     load();
   }, []);
+
+  const getDayOfWeek = (relativeDay:number) => {
+    if (relativeDay === 0) {
+      return "Today";
+    } else if (relativeDay === 1) {
+      return "Tomorrow";
+    } else {
+      var date = new Date();
+      date.setDate(date.getDate() + relativeDay);
+      switch (date.getDay()) {
+        case 0:
+          return "Sunday";
+        case 1:
+          return "Monday";
+        case 2:
+          return "Tuesday";
+        case 3:
+          return "Wednesday";
+        case 4:
+          return "Thursday";
+        case 5:
+          return "Friday";
+        default:
+          return "Saturday";
+      }
+    }
+  }
+
+  const sliderValueLabelFormat = (value:number) => {
+    return getDayOfWeek(value);
+  }
+
+  function ValueLabelComponent(props:{
+    children: any,
+    open?: boolean,
+    value: number
+  }) {
+    const { children, open, value } = props;
+  
+    return (
+      <Tooltip open={open} enterTouchDelay={0} placement="top" title={getDayOfWeek(value)}>
+        {children}
+      </Tooltip>
+    );
+  }
   
   return (
     <div className={classes.root}>
       <div className={classes.dayContainer}>
         <Typography>
-          Day {day}
+          {getDayOfWeek(day)}
         </Typography>
         <Slider
           value={day}
           onChange={(e, newVal) => setDay(newVal as number)}
-          valueLabelDisplay="auto"
+          ValueLabelComponent={ValueLabelComponent}
           step={1}
           marks
           min={0}
