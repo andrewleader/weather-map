@@ -63,8 +63,8 @@ const ForecastMap = observer((props:{
     return (
       <>
         {state.locations.map(location => (
-          <Marker key={location.name} position={location.position}>
-            <InfoWindow>
+          <Marker position={location.position}>
+            <InfoWindow position={location.position}>
               <ForecastLocationPreview location={location} day={state.day}/>
             </InfoWindow>
           </Marker>
