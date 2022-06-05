@@ -1,4 +1,6 @@
 import PointInfo from "../models/pointInfo";
+import db from "../db";
+import moment from "moment";
 
 export interface GridpointForecastPeriod {
   number: number; // Starting with 1
@@ -16,6 +18,7 @@ export interface GridpointForecastPeriod {
 
 export interface GridpointForecastProperties {
   periods: GridpointForecastPeriod[];
+  generatedAt: string;
 }
 
 export default class Api {
@@ -37,6 +40,32 @@ export default class Api {
   }
 
   static async getForecastAsync(pointInfo: PointInfo) {
-    return await Api.get(`/gridpoints/${pointInfo.cwa}/${pointInfo.gridX},${pointInfo.gridY}/forecast`) as GridpointForecastProperties;
+    const id = `${pointInfo.cwa}.${pointInfo.gridX}.${pointInfo.gridY}`;
+
+    const cached = await db.collection('forecasts').doc(id).get();
+    var cachedWorstCase:GridpointForecastProperties|undefined = undefined;
+    if (cached.exists) {
+      const cachedAnswer = cached.data() as GridpointForecastProperties;
+      const generatedAt = moment(cachedAnswer.generatedAt);
+      const now = moment();
+      if (generatedAt.isAfter(now.clone().subtract(30, 'm'))) {
+        return cachedAnswer;
+      }
+      if (generatedAt.isAfter(now.clone().subtract(6, 'h'))) {
+        cachedWorstCase = cachedAnswer;
+      }
+    }
+    
+    try {
+      const answer = await Api.get(`/gridpoints/${pointInfo.cwa}/${pointInfo.gridX},${pointInfo.gridY}/forecast`) as GridpointForecastProperties;
+      db.collection('forecasts').doc(id).set(answer, {merge:true});
+      return answer;
+    } catch (e) {
+      console.log("Failed to get forecast: " + e);
+      if (cachedWorstCase) {
+        return cachedWorstCase;
+      }
+      throw e;
+    }
   }
 }
