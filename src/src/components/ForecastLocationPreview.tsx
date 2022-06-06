@@ -27,9 +27,11 @@ const ForecastLocationPreview = observer((props:{
     }
   }
 
+  var url = `https://forecast.weather.gov/MapClick.php?lon=${props.location.position.lng}&lat=${props.location.position.lat}`;
+
   return (
     <div style={{backgroundColor: `rgb(${colorR},${colorG},0)`}}>
-      <img src={forecastDay.icon} width="80" height="80"/>
+      <a href={url}><img src={forecastDay.icon} width="80" height="80"/></a>
       <p>{forecastDay.getSummaryString()}</p>
     </div>
   );
