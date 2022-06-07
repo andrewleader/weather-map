@@ -7,6 +7,14 @@ const ForecastLocationPreview = observer((props:{
   day: number
 }) => {
 
+  var url = `https://forecast.weather.gov/MapClick.php?lon=${props.location.position.lng}&lat=${props.location.position.lat}`;
+
+  if (props.location.forecastData == null) {
+    return (
+      <a href={url}>Failed to load</a>
+    );
+  }
+
   var forecastDay = props.location.forecastData!.days[props.day];
   var overallRating = forecastDay.getOverallRating(); // Value from 0-1, with 1 being best
   console.log("Overall: " + overallRating);
@@ -26,8 +34,6 @@ const ForecastLocationPreview = observer((props:{
       colorG = 255 * multiplier;
     }
   }
-
-  var url = `https://forecast.weather.gov/MapClick.php?lon=${props.location.position.lng}&lat=${props.location.position.lat}`;
 
   return (
     <div style={{backgroundColor: `rgb(${colorR},${colorG},0)`}}>

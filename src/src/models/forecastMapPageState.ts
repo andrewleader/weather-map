@@ -39,8 +39,12 @@ export default class ForecastMapPageState {
       if (existing.exists && existing.data()!.updated >= (nowInSeconds - 60 * 40)) {
         location.forecastData = ForecastData.getFromData(JSON.parse(existing.data()!.data));
         console.log("cached");
+        this.locations = locations;
       } else {
+        try {
         await this.loadLocation(location);
+        } catch {}
+        this.locations = locations;
       }
     }
     this.locations = locations;
